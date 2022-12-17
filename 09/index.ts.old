@@ -1,0 +1,43 @@
+// export function p2(input) {
+//   const visited = new Set(['0,0'])
+//   const headCoords = [0, 0]
+//   const tailCoords = [0, 0]
+// 
+//   for (const line of input.split('\n')) {
+//     const [direction, countString] = line.split(' ')
+//     let count = parseInt(countString)
+//     while (count > 0) {
+//       if (direction === 'R') {
+//         headCoords[0]++
+//       } else if (direction === 'U') {
+//         headCoords[1]++
+//       } else if (direction === 'L') {
+//         headCoords[0]--
+//       } else if (direction === 'D') {
+//         headCoords[1]--
+//       }
+//       if (
+//         Math.abs(tailCoords[0] - headCoords[0]) > 1 ||
+//         Math.abs(tailCoords[1] - headCoords[1]) > 1) {
+//         if (direction === 'R') {
+//           tailCoords[0] = headCoords[0] - 1
+//           tailCoords[1] = headCoords[1]
+//         } else if (direction === 'U') {
+//           tailCoords[0] = headCoords[0]
+//           tailCoords[1] = headCoords[1] - 1
+//         } else if (direction === 'L') {
+//           tailCoords[0] = headCoords[0] + 1
+//           tailCoords[1] = headCoords[1]
+//         } else if (direction === 'D') {
+//           tailCoords[0] = headCoords[0]
+//           tailCoords[1] = headCoords[1] + 1
+//         }
+//       }
+//       visited.add(tailCoords.join(','))
+//       count--
+//     }
+//   }
+//   return visited.size
+// }
+// 
+// 
