@@ -5,11 +5,11 @@ https://adventofcode.com/
 To generate the solution for a particular `<day>`, run:
 
 ```
-deno run --allow-read --allow-hrtime --allow-net run.ts <day>
+deno run --allow-read --allow-hrtime --allow-net run.ts <year> <day>
 ```
 
 When building a solution, add the watch flag:
 
 ```
-deno run --allow-read --allow-hrtime --allow-net --watch run.ts <day>
+deno run --allow-read --allow-hrtime --allow-net --watch run.ts <year> <day>
 ```
