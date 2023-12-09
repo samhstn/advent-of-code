@@ -1,44 +1,4 @@
-const pairs = (arr) => {
-  const newArr = []
-  let next = null
-  for (const a of arr) {
-    if (next) {
-      newArr.push([next, a])
-      next = null
-    } else {
-      next = a
-    }
-  }
-  return newArr
-}
-
-const parseInput = (input) => {
-  const [[seedStr], ...mapStr] = input
-    .split('\n\n')
-    .map(l => l.replace(/.*:\s/, '')
-               .split('\n')
-               .map(m => m.split(' ')))
-  const seeds = seedStr.map(s => parseInt(s))
-  const mapsArr = mapStr.map(l => l.map(m => m.map(n => parseInt(n))))
-  return [seeds, mapsArr]
-}
-
-export const p1 = (input) => {
-  const [seeds, mapsArr] = parseInput(input)
-
-  for (const maps of mapsArr) {
-    for (const [index, seed] of seeds.entries()) {
-      for (const [destination, source, len] of maps) {
-        if (seed >= source && seed < source + len) {
-          seeds[index] += destination - source
-          break
-        }
-      }
-    }
-  }
-
-  return Math.min(...seeds)
-}
+import { assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
 
 const getUnmappedRanges = ([seedStart, seedLen]: number[], mappedRanges: number[][]): number[][] => {
   const unmappedRanges = []
@@ -71,12 +31,12 @@ const mapSeed = (
     return [
       [seedStart + destination - mapStart, mapStart - seedStart + mapLen],
       [mapStart + mapLen, seedStart + seedLen - (mapStart + mapLen)]
-    ]
+    ].filter(([a, b]) => b !== 0)
   } else if (mapStart > seedStart && mapStart + mapLen >= seedStart + seedLen) {
     return [
       [seedStart, mapStart - seedStart],
       [destination, seedLen - (mapStart - seedStart)]
-    ].filter(([a, b]) => b !== 0)
+    ]
   } else if (mapStart > seedStart && mapStart + mapLen < seedStart + seedLen) {
     return [
       [seedStart, mapStart - seedStart],
@@ -100,29 +60,63 @@ const genSeedRanges = ([seedStart, seedLen]: number[], map: number[], mappedRang
   return ranges.length > 0 ? ranges : [[seedStart, seedLen]]
 }
 
-export const p2 = (input) => {
-  const [seeds, mapsArr] = parseInput(input)
-  let seedRanges = pairs(seeds)
+// Deno.test('getUnmappedRanges #1', () => {
+//   const seed = [5, 6]
+//   const mappedRanges = [
+//     [1, 2],
+//     [6, 3],
+//   ]
+//   const actual = getUnmappedRanges(seed, mappedRanges)
+//   const expected = [[5, 1], [9, 2]]
+//   assertEquals(actual, expected)
+// })
+// 
+// Deno.test('getUnmappedRanges #2', () => {
+//   const seed = [5, 6]
+//   const mappedRanges = [
+//     [4, 2],
+//     [8, 6]
+//   ]
+//   const actual = getUnmappedRanges(seed, mappedRanges)
+//   const expected = [[6, 2]]
+//   assertEquals(actual, expected)
+// })
+// 
+// Deno.test('getUnmappedRanges #3', () => {
+//   const seed = [5, 6]
+//   const actual = getUnmappedRanges(seed, [])
+//   const expected = [[5, 6]]
+//   assertEquals(actual, expected)
+// })
+// 
+// Deno.test('genSeedRanges #1', () => {
+//   const seedRange = [79, 14] // 79, 80, ..., 91, 92
+//   const seedMapsArr = [
+//     { seedMap: [50, 98, 2], expected: [[79, 14]] }, // include none
+//     { seedMap: [52, 50, 48], expected: [[81, 14]] }, // include all
+//     { seedMap: [5, 78, 5], expected: [[6, 4], [83, 10]] }, // include start 
+//     { seedMap: [5, 90, 5], expected: [[79, 11], [5, 3]] }, // include end 
+//     { seedMap: [5, 82, 5], expected: [[79, 3], [5, 5], [87, 6]] }, // include middle 
+//   ]
+// 
+//   for (const {seedMap, expected} of seedMapsArr) {
+//     assertEquals(genSeedRanges(seedRange, seedMap), expected)
+//   }
+// })
+// 
+// Deno.test('genSeedRanges #2', () => {
+//   const seedRange = [78, 3]
+//   const seedMap = [56, 93, 4]
+//   const mappedRanges = [[60, 37]]
+//   const expected = [[78, 3]]
+// 
+//   assertEquals(genSeedRanges(seedRange, seedMap, mappedRanges), expected)
+// })
 
-  for (const maps of mapsArr) {
-    // console.log('maps', maps)
-    const newSeedRanges = []
-    for (const seedRange of seedRanges) {
-      let newSeedRange
-      const mappedRanges = []
-      console.log('sssssss', seedRange)
-      for (const map of maps) {
-        const [destination, _mapStart, mapLen] = map
-        newSeedRange = genSeedRanges(seedRange, map, mappedRanges)
-        console.log({ newSeedRange, seedRange, map, mappedRanges })
-        mappedRanges.push([destination, mapLen])
-      }
-      newSeedRanges.push(...newSeedRange)
-    }
-    console.log(seedRanges)
-    seedRanges = JSON.parse(JSON.stringify(newSeedRanges))
-  }
-  console.log(seedRanges)
+Deno.test('genSeedRanges #3', () => {
+  const seedRange = [81, 14]
+  const seedMap = [18, 25, 70]
+  const expected = [[74, 14]]
 
-  return Math.min(...seedRanges.map(s => s[0]))
-}
+  assertEquals(genSeedRanges(seedRange, seedMap), expected)
+})
