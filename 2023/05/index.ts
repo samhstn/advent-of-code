@@ -32,8 +32,6 @@ export const p1 = (input) => {
   return Math.min(...seeds)
 }
 
-// 2388612 too low
-
 export const p2 = (input) => {
   let [seeds, mapsArr] = parseInput(input)
 
