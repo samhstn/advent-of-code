@@ -27,35 +27,35 @@ export const p1 = (input) => {
   return steps
 }
 
-// 22199 too low
+const gcd = (a, b) => b === 0 ? a : gcd(b, a % b)
+const lcm = (a, b) => Math.abs(a * b) / gcd(a, b)
 
 export const p2 = (input) => {
   const [instruction, maps] = parseInput(input)
 
   let poss = Object.keys(maps).filter(k => k[2] === 'A')
-  console.log(poss)
 
-  // possLengths = poss.map(pos => {
-  //   let initialPos = pos
-  //   let started = false
-  //   let steps = 0
-  //   while (!started || initialPos !== pos) {
-  //     const side = instruction[steps % instruction.length]
-  //     pos = maps[pos][side === 'R' ? 1 : 0]
-  //     steps += 1
-  //   }
-  //   return steps
-  // })
+  let steps = 0
+  const possInfo = poss.map(_ => ({ visited: [], zIndex: 0, foundCycle: false }))
 
-  // console.log(possLengths)
+  while (poss.some(p => p[2] !== 'Z') && possInfo.some(i => !i.foundCycle)) {
+    for (const [i, pos] of poss.entries()) {
+      if (possInfo[i].foundCycle) {
+        continue
+      }
+      const s = `${steps % instruction.length}${pos}`
+      if (possInfo[i].visited.includes(s)) {
+        possInfo[i].foundCycle = true
+      }
+      possInfo[i].visited.push(s)
+      if (pos[2] === 'Z') {
+        possInfo[i].zIndex = steps
+      }
+    }
+    const side = instruction[steps % instruction.length]
+    poss = poss.map(pos => maps[pos][side === 'R' ? 1 : 0])
+    steps += 1
+  }
 
-  // while (poss.some(p => p[2] !== 'Z')) {
-  //   poss = poss.map(p => {
-  //     const side = instruction[steps % instruction.length]
-  //     return maps[p][side === 'R' ? 1 : 0]
-  //   })
-  //   steps += 1
-  // }
-
-  // return steps
+  return possInfo.slice(1).reduce((acc, { zIndex }) => lcm(acc, zIndex), possInfo[0].zIndex)
 }
