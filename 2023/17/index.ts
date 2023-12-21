@@ -1,119 +1,131 @@
-const last = (arr) => arr[arr.length - 1]
+class PriorityQueue {
+  constructor(coord, priority) {
+    this.coords = coord ? [{ coord, priority }] : []
+  }
 
-const dedupe = (a) => [...new Set(a.map(a => JSON.stringify(a)))].map(a => JSON.parse(a))
+  push(coord, priority) {
+    this.coords.push({ coord, priority })
+    this.bubbleUp()
+  }
 
-const sameStepCount = (path) => {
-  let count = 1
-  let dir = last(path)
-  for (let i = path.length - 2; i >= 0; i--) {
-    if (path[i] === dir) {
-      dir = path[i]
-      count += 1
-    } else {
-      return count
+  pop() {
+    const first = this.coords[0].coord
+    const last = this.coords.pop()
+    if (this.coords.length > 0) {
+      this.coords[0] = last
+      this.bubbleDown()
     }
-  }
-  return count
-}
-
-const next = (coords, grid) => {
-  console.log(grid.map((row, y) => row.map((cell, x) => {
-    const c = coords.find((coord) => coord[0] === x && coord[1] === y)
-    return c?.[3] ? last(c[3]) : cell
-  }).join('')).join('\n'))
-  console.log(coords.map((coord) => JSON.stringify(coord)).join(' ') + '\n')
-
-  const dirMap = {
-    '<': [-1, 0],
-    '>': [1, 0],
-    '^': [0, -1],
-    'v': [0, 1]
+    return first
   }
 
-  const oppositeDir = {
-    '>': '<',
-    '<': '>',
-    '^': 'v',
-    'v': '^'
+  isEmpty() {
+    return this.coords.length === 0
   }
 
-  const newCoords = []
-  for (const [x, y, heatLoss, path] of coords) {
-    const correctPath = [
-      [1, 0, 4, '>'],
-      [2, 0, 5, '>>'],
-      [2, 1, 6, '>>v'],
-      [3, 1, 11, '>v>'],
-      [4, 1, 15, 'v>>'],
-      [5, 1, 20, '>>>'],
-      [5, 0, 23, '>>^'],
-      [6, 0, 25, '>^>'],
-      [7, 0, 28, '^>>'],
-      [8, 0, 29, '>>>'],
-      [8, 1, 32, '>>v'],
-      [8, 2, 37, '>vv'],
-      [9, 2, 41, 'vv>'],
-      [10, 2, 43, 'v>>'],
-      [10, 3, 47, '>>v'],
-      [10, 4, 52, '>vv'],
-    ]
-    if (correctPath.map(p => JSON.stringify(p)).includes(JSON.stringify([x, y, heatLoss, path]))) {
-      console.log('ccccccccccc', JSON.stringify([x, y, heatLoss, path]))
-    }
-    for (const dir of ['<', '>', '^', 'v']) {
-      const [newX, newY] = [x + dirMap[dir][0], y + dirMap[dir][1]]
-      if ( newX < 0 || newX >= grid[0].length
-        || newY < 0 || newY >= grid.length
-        || dir === oppositeDir[last(path)]
-        || path === dir.repeat(3)) {
-        continue
+  bubbleUp() {
+    let index = this.coords.length - 1
+    const coord = this.coords[index]
+
+    while (index > 0) {
+      const parentIndex = Math.floor((index - 1) / 2)
+      const parent = this.coords[parentIndex]
+
+      if (coord.priority >= parent.priority) {
+        break
       }
-      const cell = grid[newY][newX]
-      if (heatLoss === 37) {
-        // console.log('pushing', [newX, newY, heatLoss + cell, `${path}${dir}`.slice(-3)])
-      }
-      newCoords.push([newX, newY, heatLoss + cell, `${path}${dir}`.slice(-3)])
+      this.coords[index] = parent
+      this.coords[parentIndex] = coord
+      index = parentIndex
     }
   }
-  return newCoords
-}
 
-export const p1 = (input) => {
-  const grid = input.split('\n').map(line => line.split('').map(c => parseInt(c)))
-  const visited = new Map()
-  let coords = [[0, 0, 0, '']]
-  let count = 0
-  while (coords.length > 0 && count < 20) {
-    console.log(`count ${count}`)
-    coords = next(coords, grid)
-    coords = dedupe(coords)
-    const toRemove = new Set()
-    for (const [x, y, heatLoss, path] of coords) {
-      const key = `${x},${y},${path}`
-      if (visited.has(key)) {
-        const visitedHeatLoss = visited.get(key)
-        if (visitedHeatLoss > heatLoss) {
-          visited.set(key, heatLoss)
-        } else {
-          toRemove.add(key)
+  bubbleDown() {
+    let index = 0
+    const length = this.coords.length
+    const coord = this.coords[0]
+
+    while (true) {
+      let leftChildIndex = 2 * index + 1
+      let rightChildIndex = 2 * index + 2
+      let leftChild, rightChild
+      let swap = null
+
+      if (leftChildIndex < length) {
+        leftChild = this.coords[leftChildIndex]
+        if (leftChild.priority < coord.priority) {
+          swap = leftChildIndex
         }
-      } else {
-        visited.set(key, heatLoss)
       }
+
+      if (rightChildIndex < length) {
+        rightChild = this.coords[rightChildIndex]
+        if ((swap === null && rightChild.priority < coord.priority) || 
+            (swap !== null && rightChild.priority < leftChild.priority)) {
+            swap = rightChildIndex
+        }
+      }
+
+      if (swap === null) {
+        break
+      }
+      this.coords[index] = this.coords[swap]
+      this.coords[swap] = coord
+      index = swap
     }
-    coords = coords.filter(([x, y, _, path]) => !toRemove.has(`${x},${y},${path}`))
-    count += 1
   }
-  let minHeatLoss = Infinity
-  for (const [path, heatLoss] of visited) {
-    if (path.split(',').slice(0, 2).join(',') === `${grid[0].length - 1},${grid.length - 1}`) {
-      console.log('pppppp', path.split(',').slice(0, 2).join(','), `${grid[0].length - 1},${grid.length - 1}`)
-      minHeatLoss = Math.min(heatLoss, minHeatLoss)
-    }
-  }
-  // console.log(JSON.stringify(paths, null, 2))
-  return minHeatLoss
 }
 
-export const p2 = (input) => {
+const getMinHeatLoss = ({ turnCondition, maxBlocksBeforeTurn, minBlocksBeforeStop }) => (input) => {
+  const grid = input.split('\n').map(line => line.split('').map(c => parseInt(c)))
+
+  let seen = new Set()
+  let pq = new PriorityQueue([0, 0, 0, 0, 0, 0], 0)
+
+  while (!pq.isEmpty()) {
+    const coord = pq.pop()
+    const [hl, r, c, dr, dc, n] = coord
+
+    if (r === grid.length - 1 && c === grid[0].length - 1 && n >= minBlocksBeforeStop) {
+      return hl
+    }
+
+    const key = coord.slice(1).join(',')
+    if (seen.has(key)) {
+      continue
+    }
+
+    seen.add(key)
+
+    if (n < maxBlocksBeforeTurn && (dr !== 0 || dc !== 0)) {
+      let nr = r + dr
+      let nc = c + dc
+      if (nr >= 0 && nr < grid.length && nc >= 0 && nc < grid[0].length) {
+        pq.push([hl + grid[nr][nc], nr, nc, dr, dc, n + 1], hl + grid[nr][nc])
+      }
+    }
+
+    if (turnCondition(n, dr, dc)) {
+      for (let [ndr, ndc] of [[0, 1], [1, 0], [0, -1], [-1, 0]]) {
+        if ((ndr !== dr || ndc !== dc) && (ndr !== -dr || ndc !== -dc)) {
+          let nr = r + ndr
+          let nc = c + ndc
+          if (nr >= 0 && nr < grid.length && nc >= 0 && nc < grid[0].length) {
+            pq.push([hl + grid[nr][nc], nr, nc, ndr, ndc, 1], hl + grid[nr][nc])
+          }
+        }
+      }
+    }
+  }
 }
+
+export const p1 = getMinHeatLoss({
+  turnCondition: () => true,
+  maxBlocksBeforeTurn: 3,
+  minBlocksBeforeStop: 0
+})
+
+export const p2 = getMinHeatLoss({
+  turnCondition: (n, dr, dc) => n >= 4 || (dr === 0 && dc === 0),
+    maxBlocksBeforeTurn: 10,
+  minBlocksBeforeStop: 4
+})
