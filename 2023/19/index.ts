@@ -57,21 +57,6 @@ export const p1 = (input) => {
   return total
 }
 
-const merge = (a, b) => {
-  for (const [k, v] of Object.entries(b)) {
-    const av = a[k]
-    if (av) {
-      const newV = []
-      for (let i = 0; i < 4; i++) {
-        newV.push([Math.min(av[i][0], v[i][0]), Math.max(av[i][1], v[i][1])])
-      }
-      a[k] = newV
-    } else {
-      a[k] = v
-    }
-  }
-}
-
 const count = (ranges, name, workflows) => {
   if (name === 'R') {
     return 0
