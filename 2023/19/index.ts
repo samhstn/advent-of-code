@@ -57,8 +57,6 @@ export const p1 = (input) => {
   return total
 }
 
-const clone = o => JSON.parse(JSON.stringify(o))
-
 const merge = (a, b) => {
   for (const [k, v] of Object.entries(b)) {
     const av = a[k]
@@ -74,50 +72,52 @@ const merge = (a, b) => {
   }
 }
 
-// ex ans 167409079868000
+const count = (ranges, name, workflows) => {
+  if (name === 'R') {
+    return 0
+  } else if (name === 'A') {
+    let total = 1
+    for (const [a, b] of ranges) {
+      total *= b - a + 1
+    }
+    return total
+  }
+
+  let total = 0
+
+  for (const rule of workflows[name]) {
+    if (rule.includes(':')) {
+      const [check, dest] = rule.split(':')
+      const [c, comp, ...ns] = check.split('')
+      const n = parseInt(ns.join(''))
+      const [a, b] = ranges['xmas'.indexOf(c)]
+      let t, f
+      if (comp === "<") {
+        t = [a, Math.min(n - 1, b)]
+        f = [Math.max(n, a), b]
+      } else {
+        t = [Math.max(n + 1, a), b]
+        f = [a, Math.min(n, b)]
+      }
+
+      if (t[0] <= t[1]) {
+        const newRanges = ranges.map((r, i) => i === 'xmas'.indexOf(c) ? t : r)
+        total += count(newRanges, dest, workflows)
+      }
+
+      if (f[0] <= f[1]) {
+        ranges['xmas'.indexOf(c)] = f
+      } else {
+        break
+      }
+    } else {
+      total += count(ranges, rule, workflows)
+    }
+  }
+  return total
+}
+
 export const p2 = (input) => {
   const [workflows] = parseInput(input)
-  const acceptedRanges = []
-  let paths = {
-    in: [[1, 4000], [1, 4000], [1, 4000], [1, 4000]]
-  }
-
-  while (Object.keys(paths).length > 0) {
-    let newPaths = {}
-    for (const [name, ranges] of Object.entries(paths)) {
-      if (name === 'A') {
-        acceptedRanges.push(ranges)
-      } else if (name === 'R') {
-        continue
-      } else {
-        let rangesAgg = clone(ranges)
-        for (const rule of workflows[name]) {
-          // console.log('rule', rule)
-          // console.log('paths', paths)
-          // console.log('newPaths', newPaths)
-          // console.log('rangesAgg', rangesAgg)
-          // console.log('')
-          if (rule.includes(':')) {
-            const [c, comp, ...rest] = rule.split('')
-            const [nStr, dest] = rest.join('').split(':')
-            const n = parseInt(nStr)
-            const index = 'xmas'.indexOf(c)
-            if (comp === '>') {
-              merge(newPaths, {[dest]: clone(rangesAgg).map(([start, end], i) => i === index ? [n + 1, end] : [start, end])})
-              rangesAgg[index] = [rangesAgg[index][0], n]
-            } else {
-              merge(newPaths, {[dest]: clone(rangesAgg).map(([start, end], i) => i === index ? [start, n - 1] : [start, end])})
-              rangesAgg[index] = [n, rangesAgg[index][1]]
-            }
-          } else {
-            merge(newPaths, {[rule]: rangesAgg})
-          }
-        }
-      }
-    }
-    console.log('ppppppp', newPaths)
-    paths = newPaths
-  }
-
-  console.log('aaaaaa', acceptedRanges)
+  return count([[1, 4000], [1, 4000], [1, 4000], [1, 4000]], 'in', workflows)
 }
